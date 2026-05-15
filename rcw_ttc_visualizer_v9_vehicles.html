@@ -1,0 +1,342 @@
+
+<h2 class="sr-only">RCW TTC logic window visualizer v9 — improved top-down motorcycle and sedan SVG vehicles</h2>
+<style>
+.w{padding:1rem 0;font-family:var(--font-sans);}
+.tog{display:flex;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);overflow:hidden;width:fit-content;margin-bottom:8px;}
+.tbtn{padding:7px 15px;font-size:12px;font-weight:500;cursor:pointer;background:transparent;border:none;color:var(--color-text-secondary);border-right:0.5px solid var(--color-border-secondary);}
+.tbtn:last-child{border-right:none;}
+.tbtn:hover:not(.ac):not(.ai):not(.ab){background:var(--color-background-secondary);}
+.tbtn.ac{background:#E24B4A;color:#fff;}.tbtn.ai{background:#378ADD;color:#fff;}.tbtn.ab{background:#1D9E75;color:#fff;}
+.ebadge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px;border-radius:var(--border-radius-md);background:#FAEEDA;color:#633806;border:0.5px solid #EF9F27;margin-bottom:8px;}
+.sinfo{font-size:12px;color:var(--color-text-secondary);margin-bottom:1.25rem;padding:8px 12px;background:var(--color-background-secondary);border-left:3px solid #888;border-radius:0;}
+.sinfo.sc{border-left-color:#E24B4A;}.sinfo.si{border-left-color:#378ADD;}.sinfo.sb{border-left-color:#1D9E75;}
+.sr{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.sr label{font-size:12px;color:var(--color-text-secondary);min-width:110px;}
+.sr input{flex:1;}
+.sr span{font-size:13px;font-weight:500;min-width:60px;text-align:right;color:var(--color-text-primary);}
+.sbar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--border-radius-md);margin:1.25rem 0;border:0.5px solid var(--color-border-tertiary);}
+.sdot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.s-safe .sdot{background:#639922;}.s-warn .sdot{background:#EF9F27;animation:pulse .7s infinite alternate;}
+.s-rdw .sdot{background:#1D9E75;animation:pulse .9s infinite alternate;}.s-alert .sdot{background:#E24B4A;animation:pulse .3s infinite alternate;}
+@keyframes pulse{from{opacity:1}to{opacity:0.2}}
+.slbl{font-size:13px;font-weight:500;}
+.s-safe .slbl{color:#3B6D11;}.s-warn .slbl{color:#854F0B;}.s-rdw .slbl{color:#0F6E56;}.s-alert .slbl{color:#A32D2D;}
+.sdet{font-size:12px;color:var(--color-text-secondary);margin-left:auto;}
+.mets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:1.25rem;}
+.met{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:9px 11px;}
+.met .ml{font-size:11px;color:var(--color-text-secondary);margin-bottom:3px;}
+.met .mv{font-size:14px;font-weight:500;color:var(--color-text-primary);}
+.scene-outer{display:flex;gap:0;margin-bottom:1.25rem;}
+.ruler{position:relative;width:32px;flex-shrink:0;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-right:none;border-radius:var(--border-radius-md) 0 0 var(--border-radius-md);overflow:hidden;}
+.scene{position:relative;flex:1;background:#3a3a3a;border:0.5px solid var(--color-border-tertiary);border-radius:0 var(--border-radius-md) var(--border-radius-md) 0;overflow:hidden;}
+.road{position:absolute;left:50%;transform:translateX(-50%);width:140px;height:100%;background:#4a4a4a;}
+.shoulder-l{position:absolute;left:0;top:0;bottom:0;right:calc(50% + 70px);background:#555;}
+.shoulder-r{position:absolute;right:0;top:0;bottom:0;left:calc(50% + 70px);background:#555;}
+.kerb-l{position:absolute;left:calc(50% - 70px);top:0;bottom:0;width:4px;background:#777;}
+.kerb-r{position:absolute;right:calc(50% - 70px);top:0;bottom:0;width:4px;background:#777;}
+.lane-edge-l{position:absolute;left:calc(50% - 68px);top:0;bottom:0;width:2px;background:repeating-linear-gradient(to bottom,#f0e060 0,#f0e060 24px,transparent 24px,transparent 48px);opacity:0.85;}
+.lane-edge-r{position:absolute;right:calc(50% - 68px);top:0;bottom:0;width:2px;background:repeating-linear-gradient(to bottom,#f0e060 0,#f0e060 24px,transparent 24px,transparent 48px);opacity:0.85;}
+.zrdw{position:absolute;left:calc(50% - 66px);right:calc(50% - 66px);border:1.5px dashed #1D9E75;border-radius:3px;opacity:0;}
+.zalert{position:absolute;left:calc(50% - 66px);right:calc(50% - 66px);border:2px dashed #888;border-radius:3px;opacity:0.65;}
+.zlbl{position:absolute;font-size:10px;font-weight:500;white-space:nowrap;}
+.leg{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--color-text-secondary);margin-bottom:8px;}
+.li{display:flex;align-items:center;gap:4px;}
+.ls{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.lognote{font-size:11px;color:var(--color-text-secondary);margin-top:4px;padding:6px 10px;background:var(--color-background-secondary);border-left:3px solid var(--color-border-secondary);border-radius:0;}
+</style>
+
+<div class="w">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+  <span style="font-size:12px;color:var(--color-text-secondary);">Active system:</span>
+  <div class="tog">
+    <button class="tbtn ac" id="btnC" onclick="setSys('chigee')">Chigee SR-1</button>
+    <button class="tbtn" id="btnI" onclick="setSys('innovv')">INNOVV ThirdEye</button>
+    <button class="tbtn" id="btnB" onclick="setSys('bosch')">Bosch ARAS</button>
+  </div>
+  <div class="ebadge" id="ebadge" style="display:none;"><i class="ti ti-info-circle" style="font-size:13px;" aria-hidden="true"></i> thresholds estimated</div>
+</div>
+<div class="sinfo sc" id="sinfoEl">Alert: gap ≤ 10 m AND TTC ≤ 3 s · Beyond 10 m: suppressed regardless of TTC · Matched speeds inside 10 m: no alert (TTC = ∞)</div>
+
+<div class="sr"><label>Your speed</label><input type="range" min="0" max="130" value="80" step="1" id="ego" oninput="update()"/><span id="egoV">80 km/h</span></div>
+<div class="sr"><label>Threat speed</label><input type="range" min="0" max="180" value="110" step="1" id="thr" oninput="update()"/><span id="thrV">110 km/h</span></div>
+<div class="sr"><label>Current gap</label><input type="range" min="1" max="100" value="35" step="1" id="gp" oninput="update()"/><span id="gpV">35 m</span></div>
+
+<div id="sbar" class="sbar s-safe">
+  <div class="sdot"></div>
+  <div class="slbl" id="slbl">No alert</div>
+  <div class="sdet" id="sdet"></div>
+</div>
+
+<div class="mets">
+  <div class="met"><div class="ml">Closing speed</div><div class="mv" id="mcs">—</div></div>
+  <div class="met"><div class="ml">Current TTC</div><div class="mv" id="mttc">—</div></div>
+  <div class="met"><div class="ml">Alert threshold</div><div class="mv" id="mthr">—</div></div>
+  <div class="met"><div class="ml">Suppressed?</div><div class="mv" id="msupp">—</div></div>
+</div>
+
+<div class="scene-outer">
+  <div class="ruler" id="rulerEl"></div>
+  <div class="scene" style="height:360px;">
+    <div class="shoulder-l"></div><div class="shoulder-r"></div>
+    <div class="road"></div>
+    <div class="kerb-l"></div><div class="kerb-r"></div>
+    <div class="lane-edge-l"></div><div class="lane-edge-r"></div>
+    <div class="zrdw" id="zrdw"></div>
+    <div class="zalert" id="zalert"></div>
+    <div class="zlbl" id="lblrdw" style="display:none;color:#1D9E75;"></div>
+    <div class="zlbl" id="lblalert" style="color:#aaa;"></div>
+
+    <svg id="egoSvg" style="position:absolute;left:50%;transform:translateX(-50%);bottom:8px;" width="36" height="80" viewBox="0 0 36 80">
+      <ellipse cx="18" cy="70" rx="7" ry="9" fill="#1a1a1a" stroke="#555" stroke-width="1.5"/>
+      <ellipse cx="18" cy="70" rx="3.5" ry="4.5" fill="#888"/>
+      <ellipse cx="18" cy="10" rx="7" ry="9" fill="#1a1a1a" stroke="#555" stroke-width="1.5"/>
+      <ellipse cx="18" cy="10" rx="3.5" ry="4.5" fill="#888"/>
+      <rect x="16" y="18" width="4" height="44" rx="2" fill="#444"/>
+      <ellipse cx="18" cy="40" rx="11" ry="8" fill="#2255aa"/>
+      <rect x="7" y="36" width="24" height="8" rx="3" fill="#1a3a80"/>
+      <ellipse cx="18" cy="36" rx="6" ry="4" fill="#3366cc" opacity="0.8"/>
+      <rect x="5" y="38" width="6" height="4" rx="1" fill="#777"/>
+      <rect x="25" y="38" width="6" height="4" rx="1" fill="#777"/>
+      <ellipse cx="18" cy="3" rx="3" ry="2.5" fill="#ffe066" opacity="0.95"/>
+      <rect x="14" y="57" width="8" height="5" rx="1" fill="#cc3333" opacity="0.9"/>
+      <rect x="14" y="62" width="8" height="3" rx="1" fill="#ff6666" opacity="0.5"/>
+    </svg>
+
+    <svg id="threatSvg" style="position:absolute;left:50%;transform:translateX(-50%);" width="62" height="100" viewBox="0 0 62 100">
+      <rect x="8" y="12" width="8" height="14" rx="4" fill="#1a1a1a" stroke="#444" stroke-width="1"/>
+      <rect x="46" y="12" width="8" height="14" rx="4" fill="#1a1a1a" stroke="#444" stroke-width="1"/>
+      <rect x="8" y="74" width="8" height="14" rx="4" fill="#1a1a1a" stroke="#444" stroke-width="1"/>
+      <rect x="46" y="74" width="8" height="14" rx="4" fill="#1a1a1a" stroke="#444" stroke-width="1"/>
+      <rect x="14" y="8" width="34" height="84" rx="8" fill="#378ADD" id="cBody"/>
+      <rect x="16" y="6" width="30" height="88" rx="7" fill="#378ADD" id="cBody2"/>
+      <path d="M16 28 Q18 16 31 14 Q44 16 46 28 Z" fill="#2060a0" id="cRoof"/>
+      <rect x="18" y="16" width="26" height="14" rx="4" fill="#99ccee" opacity="0.55" id="cWind"/>
+      <rect x="18" y="72" width="26" height="12" rx="3" fill="#334455" opacity="0.4" id="cRearWind"/>
+      <rect x="17" y="42" width="10" height="14" rx="2" fill="#99ccee" opacity="0.45"/>
+      <rect x="35" y="42" width="10" height="14" rx="2" fill="#99ccee" opacity="0.45"/>
+      <rect x="17" y="85" width="10" height="5" rx="2" fill="#ff3333" opacity="0.95" id="cTlL"/>
+      <rect x="35" y="85" width="10" height="5" rx="2" fill="#ff3333" opacity="0.95" id="cTlR"/>
+      <rect x="22" y="88" width="18" height="4" rx="1" fill="#ff7777" opacity="0.6"/>
+      <rect x="24" y="9" width="14" height="4" rx="2" fill="#ffe066" opacity="0.7" id="cHeadlight"/>
+      <rect x="28" y="48" width="6" height="3" rx="1" fill="#333" opacity="0.6"/>
+    </svg>
+  </div>
+</div>
+
+<div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;">Alert trigger distance vs closing speed</div>
+<div class="leg">
+  <div class="li"><div class="ls" style="background:#E24B4A;"></div>Chigee SR-1 (TTC ≤ 3 s, suppressed beyond 10 m)</div>
+  <div class="li"><div class="ls" style="background:#378ADD;outline:1px dashed #185FA5;outline-offset:1px;"></div>INNOVV ThirdEye (TTC ≤ 3 s, dynamic to 50 m)</div>
+  <div class="li"><div class="ls" style="background:#1D9E75;"></div>Bosch RDW est. (TTC ≤ 5 s OR ≤ 30 m)</div>
+  <div class="li"><div class="ls" style="background:#0F6E56;border:1px dashed #085041;"></div>Bosch RCW est. (TTC ≤ 2 s OR ≤ 8 m)</div>
+  <div class="li"><div class="ls" style="background:#639922;border-radius:50%;"></div>Current scenario</div>
+</div>
+<div style="position:relative;width:100%;height:240px;">
+  <canvas id="chart" role="img" aria-label="Line chart comparing RCW alert trigger distances for three systems">Alert distance comparison.</canvas>
+</div>
+<div class="lognote" id="logicNote" style="margin-top:8px;"></div>
+<div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px;"><i class="ti ti-info-circle" style="font-size:12px;vertical-align:-1px;" aria-hidden="true"></i> Bosch ARAS thresholds estimated — exact OEM values not publicly disclosed.</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+var activeSys='chigee';
+var SCENE_H=360,EGO_BOT=8,EGO_H=80,CAR_H=100,MAX_M=80;
+
+var CAR_BODY_COLORS={safe:'#378ADD',warn:'#D4870A',rdw:'#1D9E75',alert:'#D03030'};
+var CAR_ROOF_COLORS={safe:'#2060a0',warn:'#9a5a00',rdw:'#0a6040',alert:'#901010'};
+var CAR_TL_COLORS={safe:'#ff3333',warn:'#ff8800',rdw:'#ff3333',alert:'#ff0000'};
+
+var SYSTEMS={
+  chigee:{color:'#E24B4A',cls:'sc',est:false,
+    info:'Alert: gap ≤ 10 m AND TTC ≤ 3 s · Beyond 10 m: suppressed regardless of TTC · Matched speeds inside 10 m: no alert (TTC = ∞)',
+    thrLabel:'TTC ≤ 3 s (inside 10 m)',
+    chartDist:function(c){return Math.min(10,c>0?c*3:0);},
+    rdwDist:function(){return 0;},
+    getState:function(g,t,c){
+      if(g<=10&&isFinite(t)&&t<=3)return'alert';
+      if(g>10&&c>0&&t<=6)return'warn';
+      return'safe';
+    },
+    suppressed:function(g,t){return g>10?'Yes — beyond 10 m':!isFinite(t)?'Yes — TTC = ∞':'No';},
+    statusText:function(s){return{alert:'RCW alert — all indicators flash',warn:'Approaching 10 m zone',safe:'No alert'}[s];},
+    statusDetail:function(s,g,t){
+      if(s==='alert')return'gap ≤ 10 m AND TTC ≤ 3 s';
+      if(s==='warn')return'TTC '+(isFinite(t)?t.toFixed(1)+' s':'∞')+' — zone at '+g+' m';
+      return'Outside parameters';
+    },
+    logicNote:function(g,t){
+      var iz=g<=10,tok=isFinite(t)&&t<=3;
+      var p=['Gap '+g+' m → '+(iz?'✓ within 10 m':'✗ beyond 10 m — suppressed')];
+      if(iz)p.push('TTC '+(isFinite(t)?t.toFixed(2)+' s':'∞')+' → '+(tok?'✓ ≤ 3 s — fires':'✗ > 3 s'));
+      return p.join(' · ');
+    }
+  },
+  innovv:{color:'#378ADD',cls:'si',est:false,
+    info:'Alert: TTC ≤ 3 s at any range up to 50 m · No suppression zone · Dynamic — fires further as closing speed rises',
+    thrLabel:'TTC ≤ 3 s (up to 50 m)',
+    chartDist:function(c){return Math.min(50,c>0?c*3:0);},
+    rdwDist:function(){return 0;},
+    getState:function(g,t){
+      if(g<=50&&isFinite(t)&&t<=3)return'alert';
+      if(g<=50&&isFinite(t)&&t<=5)return'warn';
+      return'safe';
+    },
+    suppressed:function(g){return g>50?'Yes — beyond 50 m':'No';},
+    statusText:function(s){return{alert:'RCW alert — collision imminent',warn:'Approaching threshold',safe:'No alert'}[s];},
+    statusDetail:function(s,g,t){
+      if(s==='alert')return'TTC ≤ 3 s';
+      if(s==='warn')return'TTC '+t.toFixed(1)+' s';
+      return'Outside parameters';
+    },
+    logicNote:function(g,t){
+      var ir=g<=50,tok=isFinite(t)&&t<=3;
+      var p=['Gap '+g+' m → '+(ir?'✓ within 50 m':'✗ beyond 50 m')];
+      if(ir)p.push('TTC '+(isFinite(t)?t.toFixed(2)+' s':'∞')+' → '+(tok?'✓ ≤ 3 s — fires':'✗ > 3 s'));
+      return p.join(' · ');
+    }
+  },
+  bosch:{color:'#1D9E75',cls:'sb',est:true,
+    info:'Two-tier est. — RDW: TTC ≤ 5 s OR gap ≤ 30 m (display flash) · RCW: TTC ≤ 2 s OR gap ≤ 8 m (hazard lights) · Radar range: 210 m',
+    thrLabel:'~2 s RCW / ~5 s RDW',
+    chartDist:function(c){return Math.min(210,Math.max(8,c>0?c*2:0));},
+    rdwDist:function(c){return Math.min(210,Math.max(30,c>0?c*5:0));},
+    getState:function(g,t){
+      if((isFinite(t)&&t<=2)||g<=8)return'alert';
+      if((isFinite(t)&&t<=5)||g<=30)return'rdw';
+      return'safe';
+    },
+    suppressed:function(){return'No — prox OR TTC';},
+    statusText:function(s){return{alert:'RCW — hazard lights (est.)',rdw:'RDW advisory — display warning (est.)',safe:'No alert'}[s];},
+    statusDetail:function(s,g,t){
+      if(s==='alert')return(isFinite(t)&&t<=2)?'est. TTC ≤ 2 s':'Proximity ≤ 8 m';
+      if(s==='rdw')return(isFinite(t)&&t<=5)?'est. TTC ≤ 5 s':'Proximity ≤ 30 m';
+      return'Outside parameters';
+    },
+    logicNote:function(g,t){
+      var rt=isFinite(t)&&t<=2,rp=g<=8,dt=isFinite(t)&&t<=5,dp=g<=30;
+      return'RCW: '+((rt||rp)?'✓ ('+(rt?'TTC ≤ 2 s':'prox ≤ 8 m')+')':'✗')+' · RDW: '+((dt||dp)?'✓ ('+(dt?'TTC ≤ 5 s':'prox ≤ 30 m')+')':'✗');
+    }
+  }
+};
+
+var speeds=Array.from({length:35},function(_,i){return(i+1)*4;});
+var chart=new Chart(document.getElementById('chart'),{
+  type:'line',
+  data:{
+    labels:speeds.map(function(v){return v+' km/h';}),
+    datasets:[
+      {label:'Chigee SR-1',data:speeds.map(function(cs){return SYSTEMS.chigee.chartDist(cs/3.6);}),borderColor:'#E24B4A',backgroundColor:'rgba(226,75,74,0.08)',borderWidth:2,pointRadius:0,fill:true,tension:0.3},
+      {label:'INNOVV ThirdEye',data:speeds.map(function(cs){return SYSTEMS.innovv.chartDist(cs/3.6);}),borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.05)',borderWidth:2,pointRadius:0,fill:false,tension:0.3,borderDash:[5,4]},
+      {label:'Bosch RDW (est.)',data:speeds.map(function(cs){return SYSTEMS.bosch.rdwDist(cs/3.6);}),borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.07)',borderWidth:1.5,pointRadius:0,fill:true,tension:0.3,borderDash:[3,3]},
+      {label:'Bosch RCW (est.)',data:speeds.map(function(cs){return SYSTEMS.bosch.chartDist(cs/3.6);}),borderColor:'#0F6E56',backgroundColor:'rgba(15,110,86,0.04)',borderWidth:2,pointRadius:0,fill:false,tension:0.3,borderDash:[6,3]},
+      {label:'Current',data:[],borderColor:'#639922',backgroundColor:'#639922',borderWidth:0,pointRadius:8,pointStyle:'circle',showLine:false}
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+' m';}}}},
+    scales:{
+      x:{ticks:{autoSkip:true,maxRotation:0,font:{size:10},color:'#888'},grid:{color:'rgba(128,128,128,0.1)'},title:{display:true,text:'Closing speed (km/h)',font:{size:11},color:'#888'}},
+      y:{min:0,max:115,ticks:{font:{size:10},color:'#888',callback:function(v){return v+' m';}},grid:{color:'rgba(128,128,128,0.1)'},title:{display:true,text:'Alert trigger distance',font:{size:11},color:'#888'}}
+    }
+  }
+});
+
+function buildRuler(){
+  var r=document.getElementById('rulerEl');
+  r.style.height=SCENE_H+'px';r.innerHTML='';
+  var pxM=(SCENE_H-EGO_BOT-EGO_H-4)/MAX_M,baseY=EGO_BOT+EGO_H;
+  [0,5,10,15,20,25,30,40,50,60,80].forEach(function(m){
+    var y=SCENE_H-(baseY+m*pxM);
+    if(y<4||y>SCENE_H-4)return;
+    var tk=document.createElement('div');
+    tk.style.cssText='position:absolute;right:0;width:6px;height:1px;background:var(--color-border-secondary);top:'+y+'px;';
+    r.appendChild(tk);
+    var lb=document.createElement('div');
+    lb.style.cssText='position:absolute;right:8px;font-size:9px;color:var(--color-text-secondary);top:'+(y-5)+'px;text-align:right;line-height:1;';
+    lb.textContent=m+'m';r.appendChild(lb);
+  });
+}
+
+function setCarColor(state){
+  var bc=CAR_BODY_COLORS[state]||CAR_BODY_COLORS.safe;
+  var rc=CAR_ROOF_COLORS[state]||CAR_ROOF_COLORS.safe;
+  var tc=CAR_TL_COLORS[state]||CAR_TL_COLORS.safe;
+  ['cBody','cBody2'].forEach(function(id){var e=document.getElementById(id);if(e)e.setAttribute('fill',bc);});
+  var cr=document.getElementById('cRoof');if(cr)cr.setAttribute('fill',rc);
+  ['cTlL','cTlR'].forEach(function(id){var e=document.getElementById(id);if(e)e.setAttribute('fill',tc);});
+  var hl=document.getElementById('cHeadlight');
+  if(hl)hl.setAttribute('opacity',state==='alert'?'1':'0.7');
+}
+
+function setSys(sys){
+  activeSys=sys;
+  document.getElementById('btnC').className='tbtn'+(sys==='chigee'?' ac':'');
+  document.getElementById('btnI').className='tbtn'+(sys==='innovv'?' ai':'');
+  document.getElementById('btnB').className='tbtn'+(sys==='bosch'?' ab':'');
+  var s=SYSTEMS[sys];
+  var el=document.getElementById('sinfoEl');
+  el.className='sinfo '+s.cls;el.textContent=s.info;
+  document.getElementById('ebadge').style.display=s.est?'inline-flex':'none';
+  update();
+}
+
+function update(){
+  var ego=parseInt(document.getElementById('ego').value);
+  var thr=parseInt(document.getElementById('thr').value);
+  var gap=parseInt(document.getElementById('gp').value);
+  document.getElementById('egoV').textContent=ego+' km/h';
+  document.getElementById('thrV').textContent=thr+' km/h';
+  document.getElementById('gpV').textContent=gap+' m';
+
+  var csMs=Math.max(0,(thr-ego)/3.6);
+  var csKmh=csMs*3.6;
+  var ttc=csMs>0?gap/csMs:Infinity;
+  var sys=SYSTEMS[activeSys];
+  var state=sys.getState(gap,ttc,csMs);
+
+  document.getElementById('mcs').textContent=csKmh>0?csKmh.toFixed(1)+' km/h':'0 (matched)';
+  document.getElementById('mttc').textContent=isFinite(ttc)?ttc.toFixed(2)+' s':'∞';
+  document.getElementById('mthr').textContent=sys.thrLabel;
+  document.getElementById('msupp').textContent=sys.suppressed(gap,ttc);
+  document.getElementById('sbar').className='sbar s-'+state;
+  document.getElementById('slbl').textContent=sys.statusText(state);
+  document.getElementById('sdet').textContent=sys.statusDetail(state,gap,ttc);
+  document.getElementById('logicNote').textContent=sys.logicNote(gap,ttc,csMs);
+
+  setCarColor(state);
+
+  var pxM=(SCENE_H-EGO_BOT-EGO_H-4)/MAX_M,baseY=EGO_BOT+EGO_H;
+  var carBot=baseY+Math.min(gap,MAX_M)*pxM;
+  document.getElementById('threatSvg').style.bottom=Math.min(SCENE_H-CAR_H-4,Math.max(baseY+4,carBot))+'px';
+
+  var alertD=sys.chartDist(csMs);
+  var za=document.getElementById('zalert');
+  var aH=Math.min(alertD,MAX_M)*pxM;
+  za.style.height=aH+'px';za.style.bottom=baseY+'px';
+  za.style.borderColor=sys.color;za.style.opacity='0.65';
+
+  var lblA=document.getElementById('lblalert');
+  lblA.style.bottom=(baseY+aH+3)+'px';lblA.style.left='calc(50% + 72px)';
+  lblA.style.color=sys.color;
+  lblA.textContent=activeSys==='bosch'?'RCW ~'+Math.min(alertD,MAX_M).toFixed(0)+'m':Math.min(alertD,MAX_M).toFixed(0)+'m';
+
+  var zr=document.getElementById('zrdw'),lr=document.getElementById('lblrdw');
+  if(activeSys==='bosch'){
+    var rdwD=sys.rdwDist(csMs),rH=Math.min(rdwD,MAX_M)*pxM;
+    zr.style.height=rH+'px';zr.style.bottom=baseY+'px';zr.style.opacity='0.45';
+    lr.style.display='block';lr.style.bottom=(baseY+rH+3)+'px';lr.style.left='calc(50% + 72px)';
+    lr.textContent='RDW ~'+Math.min(rdwD,MAX_M).toFixed(0)+'m';
+  } else {
+    zr.style.opacity='0';lr.style.display='none';
+  }
+
+  var csIdx=Math.round((csKmh-4)/4);
+  chart.data.datasets[4].data=(csIdx>=0&&csIdx<speeds.length)?[{x:speeds[csIdx]+' km/h',y:alertD}]:[];
+  chart.update('none');
+}
+
+buildRuler();
+update();
+</script>
